@@ -1,0 +1,368 @@
+<form>
+  <label>Counterfeit Assets Detection</label>
+  <fieldset submitButton="false"></fieldset>
+  <row>
+    <panel>
+      <title>Nessus Assets</title>
+      <single>
+        <search>
+          <query>host="sc_assets" index="ca-demo"
+| stats dc(mac_address) as count</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+        <option name="underLabel">Number of assets reported by Nessus</option>
+      </single>
+    </panel>
+    <panel>
+      <title>ServiceNow Assets</title>
+      <single>
+        <search>
+          <query>index=ca-demo host=snow_cmdb 
+| stats dc(mac_address) as count</query>
+          <earliest>0</earliest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+        <option name="underLabel">Number of assets reported by CMDB</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Asset Deviations</title>
+      <single>
+        <search>
+          <query>index="ca-demo" host="sc_assets"  NOT [search index=ca-demo host=snow_cmdb  | table mac_address]
+| stats count by mac_address 
+| stats sum(count)</query>
+          <earliest>0</earliest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0xdc4e41"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+        <option name="underLabel">Suspicious or counterfeit devices on the network</option>
+        <drilldown>
+          <set token="showpanel">$click.value$</set>
+        </drilldown>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$showpanel$">
+      <title>MAC Address Verification Failures - Detail</title>
+      <input type="checkbox" token="tokReset" searchWhenChanged="true">
+        <label></label>
+        <change>
+          <unset token="showpanel"></unset>
+          <unset token="form.tokReset"></unset>
+        </change>
+        <choice value="hide">Hide Panel</choice>
+        <delimiter> </delimiter>
+      </input>
+      <table>
+        <search>
+          <query>| inputlookup sc_assets where mac_address=* where NOT 
+    [| inputlookup snow_cmdb | table mac_address]</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">5</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel depends="$showpanel$">
+      <title>MAC Address Verification Failures</title>
+      <input type="checkbox" token="tokReset" searchWhenChanged="true">
+        <label></label>
+        <change>
+          <unset token="showpanel"></unset>
+          <unset token="form.tokReset"></unset>
+        </change>
+        <choice value="hide">Hide Panel</choice>
+        <delimiter> </delimiter>
+      </input>
+      <table>
+        <search>
+          <query>host="macaddr_verification" index="ca-demo" status=Failure
+| table verificationTime mac_address manufacturer status</query>
+          <earliest>0</earliest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="manufacturer">
+          <colorPalette type="expression">if(match(value,"Huawai"),"#65A637",if(match(value,"yellow"),"#FFFF00","#ffff66"))</colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Asset Tracking - Overview</title>
+      <single>
+        <search>
+          <query>index=ca-demo host=sc_assets ip_address="*\.*\.*\.*\.*" OR host_name="*\ *"
+| makemv delim=" " ip_address
+| makemv delim=" " host_name
+| table host_name mac_address ip_address manufacturer serial_number
+| stats dc(mac_address) as count</query>
+          <earliest>0</earliest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0xf1813f"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">Assets detected with Hostname or IP changes</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Asset Tracking - Detail</title>
+      <table id="table1">
+        <search>
+          <query>index=ca-demo host=sc_assets ip_address="*\.*\.*\.*\.*" OR host_name="*\ *"
+| makemv delim=" " ip_address
+| makemv delim=" " host_name
+| rename observed as "Observed" host_name as Hostname mac_address as "MAC Address" ip_address as "IP Address" manufacturer as Manufacturer serial_number as "Serial Number"
+| table "Observed" "Hostname" "MAC Address" "IP Address" Manufacturer "Serial Number"
+| sort Hostname</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">3</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Serial Number Detection</title>
+      <single>
+        <search>
+          <query>host="sc_assets" index="ca-demo"
+| stats count by serial_number 
+| where count&gt;1
+| stats count as total</query>
+          <earliest>0</earliest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0xdc4e41"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+        <option name="underLabel">Duplicate serial numbers detected</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Duplicate Serial Numbers</title>
+      <table>
+        <search>
+          <query>index=ca-demo (host=snow_cmdb OR host=sc_assets)
+| stats values(manufacturer), values(model_number), values(mac_address), values(datacenter), count by serial_number 
+| where count &gt;2
+| rename serial_number as "Serial Number", values(manufacturer) as Manufacturer(s), values(model_number) AS Model(s), values(mac_address) as "Hardware MAC Address(es)", values(datacenter) as Location
+| fields - count</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">3</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="Serial Number">
+          <colorPalette type="minMidMax" maxColor="#F8BE34" midColor="#F8BE34" minColor="#F8BE34"></colorPalette>
+          <scale type="minMidMax" midType="percentile" midValue="50"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>CPU Validation Failures - Overview</title>
+      <single>
+        <search>
+          <query>index=ca-demo (host=sc_assets pluginid_45432!="*Xeon*" AND pluginid_45432!="*Epyc*" AND ip_address!=12.*)
+| stats dc(host_name) as count</query>
+          <earliest>0</earliest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0xdc4e41"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+        <option name="underLabel">Number of assets that failed CPU verification</option>
+      </single>
+    </panel>
+    <panel>
+      <title>CPU Validation Failures - Breakdown</title>
+      <chart>
+        <search>
+          <query>index=ca-demo (host=sc_assets pluginid_45432!="*Xeon*" AND pluginid_45432!="*Epyc*" AND ip_address!=12.*)
+| stats count by pluginid_45432</query>
+          <earliest>0</earliest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>CPU Validation Failures - Detail</title>
+      <table>
+        <search>
+          <query>index=ca-demo (host=sc_assets pluginid_45432!="*Xeon*" AND pluginid_45432!="*Epyc*" AND ip_address!=12.*)
+| rename observed as Observed manufacturer as Manufacturer pluginid_45432 as "Processor" host_name as Hostname ip_address as "IP Address" mac_address as "MAC Address"
+| table Observed Manufacturer "Processor" Hostname "IP Address" "MAC Address"</query>
+          <earliest>0</earliest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">3</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="Processor">
+          <colorPalette type="minMidMax" maxColor="#B6C75A" midColor="#FFFFFF" minColor="#294E70"></colorPalette>
+          <scale type="minMidMax" midType="percentile" midValue="50" minType="percentile" minValue="0"></scale>
+        </format>
+        <format type="number" field="Processor"></format>
+      </table>
+    </panel>
+  </row>
+</form>
